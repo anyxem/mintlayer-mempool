@@ -4,6 +4,7 @@ import { config, validateConfig } from './config';
 import { transactionDb } from './database';
 import { TransactionService } from './transaction-service';
 import { NodeClient } from './node-client';
+import { mempoolCleaner } from './mempool-cleaner';
 
 const app = express();
 
@@ -23,13 +24,19 @@ app.get('/health', async (req: any, res: any) => {
   try {
     const dbStats = await new TransactionService().getMempoolStats();
     const nodeHealthy = await NodeClient.healthCheck();
-    
+    const cleanupStats = mempoolCleaner.getStats();
+
     res.json({
       status: 'healthy',
       service: 'Mintlayer Wallet Mempool',
       database: 'connected',
       mempool_count: dbStats.count,
       node_connectivity: nodeHealthy ? 'connected' : 'disconnected',
+      cleanup: {
+        enabled: cleanupStats.enabled,
+        running: cleanupStats.running,
+        interval_seconds: cleanupStats.config.intervalMs / 1000
+      },
       timestamp: new Date().toISOString()
     });
   } catch (error: any) {
@@ -155,6 +162,51 @@ app.get('/api/transactions/pending', async (req: any, res: any) => {
   }
 });
 
+// GET /api/cleanup/status - Get cleanup process status
+app.get('/api/cleanup/status', async (req: any, res: any) => {
+  try {
+    const stats = mempoolCleaner.getStats();
+
+    res.json({
+      success: true,
+      cleanup: stats,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error: any) {
+    console.error('❌ Failed to get cleanup status:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// POST /api/cleanup/run - Manually trigger cleanup
+app.post('/api/cleanup/run', async (req: any, res: any) => {
+  try {
+    console.log('🔧 Manual cleanup requested');
+
+    const result = await mempoolCleaner.forceCleanup();
+
+    res.json({
+      success: true,
+      message: 'Cleanup completed',
+      result,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error: any) {
+    console.error('❌ Manual cleanup failed:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 export async function startServer(): Promise<void> {
   try {
     // Validate configuration
@@ -162,7 +214,10 @@ export async function startServer(): Promise<void> {
     
     // Initialize database
     await transactionDb.initialize();
-    
+
+    // Start mempool cleaner
+    mempoolCleaner.start();
+
     // Start server
     app.listen(config.port, () => {
       console.log(`🚀 Mintlayer Wallet Mempool API running on port ${config.port}`);
@@ -172,6 +227,8 @@ export async function startServer(): Promise<void> {
       console.log('   POST /api/transaction - Submit transaction');
       console.log('   GET  /api/transaction/:tx_id - Get transaction details');
       console.log('   GET  /api/transactions/pending - List pending transactions');
+      console.log('   GET  /api/cleanup/status - Cleanup process status');
+      console.log('   POST /api/cleanup/run - Manual cleanup trigger');
       console.log('   GET  /health - Health check');
     });
     

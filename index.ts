@@ -1,11 +1,16 @@
 import { startServer } from './src/api-server';
 import { transactionDb } from './src/database';
+import { mempoolCleaner } from './src/mempool-cleaner';
 
 // Graceful shutdown handler
 async function gracefulShutdown(signal: string) {
   console.log(`🛑 ${signal} received, shutting down gracefully`);
 
   try {
+    // Stop mempool cleaner
+    mempoolCleaner.stop();
+    console.log('✅ Mempool cleaner stopped');
+
     // Close database connection
     await transactionDb.close();
     console.log('✅ Database connection closed');
