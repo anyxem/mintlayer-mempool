@@ -15,7 +15,8 @@
     "pm2:logs": "pm2 logs",
     "pm2:monitor": "pm2 monit",
     "test:db": "npx ts-node src/test-database.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test:api": "npx ts-node src/test-api.ts",
+    "test": "npm run test:db && echo \"\\n\" && npm run test:api"
   },
   "keywords": [],
   "author": "",
@@ -27,8 +28,10 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@types/express": "^5.0.3",
     "@types/sqlite3": "^5.1.0",
     "axios": "^1.10.0",
+    "express": "^5.1.0",
     "sqlite3": "^5.1.7"
   }
 }

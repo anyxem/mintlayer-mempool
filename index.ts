@@ -1,37 +1,40 @@
-import { createServer } from 'http';
+import { startServer } from './src/api-server';
+import { transactionDb } from './src/database';
 
-const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+// Graceful shutdown handler
+async function gracefulShutdown(signal: string) {
+  console.log(`🛑 ${signal} received, shutting down gracefully`);
 
-const server = createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({
-    message: 'Mintlayer Wallet Mempool Service',
-    environment: NODE_ENV,
-    timestamp: new Date().toISOString(),
-    pid: process.pid
-  }));
-});
+  try {
+    // Close database connection
+    await transactionDb.close();
+    console.log('✅ Database connection closed');
 
-server.listen(PORT, () => {
-  console.log(`🚀 Mintlayer Wallet Mempool service running on port ${PORT}`);
-  console.log(`📊 Environment: ${NODE_ENV}`);
-  console.log(`🔧 Process ID: ${process.pid}`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('✅ Process terminated');
+    console.log('✅ Graceful shutdown completed');
     process.exit(0);
-  });
+  } catch (error) {
+    console.error('❌ Error during shutdown:', error);
+    process.exit(1);
+  }
+}
+
+// Register shutdown handlers
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('💥 Uncaught Exception:', error);
+  gracefulShutdown('UNCAUGHT_EXCEPTION');
 });
 
-process.on('SIGINT', () => {
-  console.log('🛑 SIGINT received, shutting down gracefully');
-  server.close(() => {
-    console.log('✅ Process terminated');
-    process.exit(0);
-  });
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+  gracefulShutdown('UNHANDLED_REJECTION');
+});
+
+// Start the server
+startServer().catch((error) => {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
 });
