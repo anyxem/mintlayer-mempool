@@ -1,6 +1,6 @@
-# Wallet Mempool Service
+# Mintlayer Wallet Mempool Service
 
-A TypeScript-based wallet mempool service with PM2 process management.
+A TypeScript-based Mintlayer wallet mempool service with PM2 process management.
 
 ## Development vs Production Setup
 
@@ -63,23 +63,23 @@ npm run pm2:prod
 
 ```bash
 # Start specific environment
-pm2 start ecosystem.config.js --only wallet-mempool-dev
-pm2 start ecosystem.config.js --only wallet-mempool-prod --env production
+pm2 start ecosystem.config.js --only mintlayer-wallet-mempool-dev
+pm2 start ecosystem.config.js --only mintlayer-wallet-mempool-prod --env production
 
 # View status
 pm2 status
 
 # View logs
-pm2 logs wallet-mempool-dev
-pm2 logs wallet-mempool-prod
+pm2 logs mintlayer-wallet-mempool-dev
+pm2 logs mintlayer-wallet-mempool-prod
 
 # Stop specific app
-pm2 stop wallet-mempool-dev
-pm2 stop wallet-mempool-prod
+pm2 stop mintlayer-wallet-mempool-dev
+pm2 stop mintlayer-wallet-mempool-prod
 
 # Delete from PM2
-pm2 delete wallet-mempool-dev
-pm2 delete wallet-mempool-prod
+pm2 delete mintlayer-wallet-mempool-dev
+pm2 delete mintlayer-wallet-mempool-prod
 ```
 
 ## Environment Variables
@@ -100,7 +100,7 @@ Once running, visit: `http://localhost:3000`
 Response example:
 ```json
 {
-  "message": "Wallet Mempool Service",
+  "message": "Mintlayer Wallet Mempool Service",
   "environment": "development",
   "timestamp": "2025-07-03T...",
   "pid": 12345

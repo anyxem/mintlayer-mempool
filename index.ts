@@ -6,7 +6,7 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const server = createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({
-    message: 'Wallet Mempool Service',
+    message: 'Mintlayer Wallet Mempool Service',
     environment: NODE_ENV,
     timestamp: new Date().toISOString(),
     pid: process.pid
@@ -14,7 +14,7 @@ const server = createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 Wallet Mempool service running on port ${PORT}`);
+  console.log(`🚀 Mintlayer Wallet Mempool service running on port ${PORT}`);
   console.log(`📊 Environment: ${NODE_ENV}`);
   console.log(`🔧 Process ID: ${process.pid}`);
 });

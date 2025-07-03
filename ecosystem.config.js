@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'wallet-mempool-dev',
+      name: 'mintlayer-wallet-mempool-dev',
       script: 'index.ts',
       interpreter: 'ts-node',
       watch: true,
@@ -25,7 +25,7 @@ module.exports = {
       min_uptime: '10s'
     },
     {
-      name: 'wallet-mempool-prod',
+      name: 'mintlayer-wallet-mempool-prod',
       script: 'dist/index.js',
       watch: false,
       env: {
