@@ -145,7 +145,7 @@ curl -X POST http://localhost:3000/api/transaction \
   -d "deadbeef01234567..."
 ```
 
-**JSON Transaction:**
+**JSON Transaction with Object Metadata:**
 ```bash
 curl -X POST http://localhost:3000/api/transaction \
   -H "Content-Type: application/json" \
@@ -153,11 +153,110 @@ curl -X POST http://localhost:3000/api/transaction \
     "transaction": "deadbeef01234567...",
     "metadata": {
       "amount": 100000000,
-      "recipient": "address123",
-      "fee": 1000
+      "recipient": "ml1qw508d6qejxtdg4y5r3zarvary0c5xw7k8txqgv",
+      "fee": 1000,
+      "wallet_info": {
+        "version": "2.1.0",
+        "platform": "web"
+      },
+      "tags": ["payment", "urgent"]
     }
   }'
 ```
+
+**JSON Transaction with String Metadata:**
+```bash
+curl -X POST http://localhost:3000/api/transaction \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transaction": "cafebabe87654321...",
+    "metadata": "Simple string metadata for this transaction"
+  }'
+```
+
+**JSON Transaction with Number Metadata:**
+```bash
+curl -X POST http://localhost:3000/api/transaction \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transaction": "beefdead01234567...",
+    "metadata": 42
+  }'
+```
+
+## Metadata Support
+
+The service supports **free-format metadata** to accommodate different wallet implementations and use cases:
+
+### Supported Metadata Types
+- **Object**: Complex nested structures with any fields
+- **String**: Simple text metadata
+- **Number**: Numeric metadata
+- **Boolean**: True/false flags
+- **Array**: Lists of values
+- **null**: Explicit null value
+- **undefined**: No metadata (omit the field)
+
+### Metadata Examples
+
+**Wallet Information:**
+```json
+{
+  "transaction": "...",
+  "metadata": {
+    "wallet_version": "2.1.0",
+    "user_id": "user123",
+    "session_id": "sess456"
+  }
+}
+```
+
+**Exchange Order:**
+```json
+{
+  "transaction": "...",
+  "metadata": {
+    "exchange_order_id": "ORD-789",
+    "trading_pair": "ML/USDT",
+    "order_type": "market",
+    "executed_price": 1.25,
+    "fees": {
+      "network_fee": 0.001,
+      "exchange_fee": 0.0025
+    }
+  }
+}
+```
+
+**Simple Tag:**
+```json
+{
+  "transaction": "...",
+  "metadata": "urgent-payment"
+}
+```
+
+**Compliance Data:**
+```json
+{
+  "transaction": "...",
+  "metadata": {
+    "compliance": {
+      "kyc_verified": true,
+      "aml_check": "passed",
+      "risk_score": 0.15
+    },
+    "routing": ["ExchangeA", "HopB", "ExchangeC"],
+    "priority": 1
+  }
+}
+```
+
+### Metadata Preservation
+- Metadata is stored exactly as provided
+- No validation or transformation is performed
+- Retrieved transactions return metadata in the same format
+- Supports any JSON-serializable data structure
 
 ## Mempool Cleanup Process
 

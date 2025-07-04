@@ -79,7 +79,7 @@ export class TransactionDatabase {
       const params = [
         transaction.tx_id,
         transaction.encoded_transaction,
-        transaction.json_metadata ? JSON.stringify(transaction.json_metadata) : null,
+        transaction.json_metadata !== undefined ? JSON.stringify(transaction.json_metadata) : null,
         transaction.status,
         transaction.node_response ? JSON.stringify(transaction.node_response) : null
       ];

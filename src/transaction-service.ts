@@ -127,7 +127,7 @@ export class TransactionService {
       if (typeof body === 'object' && body.transaction) {
         return {
           transaction: body.transaction,
-          metadata: body.metadata
+          metadata: body.metadata // Accept any metadata format
         };
       } else {
         throw new Error('Invalid JSON format: missing transaction field');

@@ -1,13 +1,13 @@
 // Core transaction types
 export interface TransactionRequest {
   transaction: string; // hex-encoded transaction
-  metadata?: any; // optional JSON metadata
+  metadata?: Record<string, any> | string | number | boolean | null; // free-format metadata
 }
 
 export interface StoredTransaction {
   tx_id: string;
   encoded_transaction: string;
-  json_metadata?: any;
+  json_metadata?: Record<string, any> | string | number | boolean | null;
   timestamp: Date;
   status: 'accepted';
   node_response?: any;
@@ -29,7 +29,7 @@ export interface TransactionDetails {
   tx_id: string;
   status: string;
   transaction?: string;
-  metadata?: any;
+  metadata?: Record<string, any> | string | number | boolean | null;
   timestamp?: string;
 }
 
