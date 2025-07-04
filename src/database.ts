@@ -43,7 +43,7 @@ export class TransactionDatabase {
           tx_id TEXT PRIMARY KEY,
           encoded_transaction TEXT NOT NULL,
           json_metadata TEXT,
-          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          timestamp INTEGER DEFAULT (strftime('%s', 'now')),
           status TEXT DEFAULT 'accepted',
           node_response TEXT
         )
@@ -121,7 +121,7 @@ export class TransactionDatabase {
             tx_id: row.tx_id,
             encoded_transaction: row.encoded_transaction,
             json_metadata: row.json_metadata ? JSON.parse(row.json_metadata) : undefined,
-            timestamp: new Date(row.timestamp),
+            timestamp: new Date(row.timestamp * 1000), // Convert from Unix seconds to Date
             status: row.status,
             node_response: row.node_response ? JSON.parse(row.node_response) : undefined
           };
@@ -161,7 +161,7 @@ export class TransactionDatabase {
             tx_id: row.tx_id,
             encoded_transaction: row.encoded_transaction,
             json_metadata: row.json_metadata ? JSON.parse(row.json_metadata) : undefined,
-            timestamp: new Date(row.timestamp),
+            timestamp: new Date(row.timestamp * 1000), // Convert from Unix seconds to Date
             status: row.status,
             node_response: row.node_response ? JSON.parse(row.node_response) : undefined
           }));

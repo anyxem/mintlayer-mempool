@@ -50,7 +50,7 @@ export class TransactionService {
     return {
       tx_id,
       status: 'accepted',
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000) // Unix timestamp in seconds
     };
   }
 
@@ -76,7 +76,7 @@ export class TransactionService {
         status: localTransaction.status,
         transaction: localTransaction.encoded_transaction,
         metadata: localTransaction.json_metadata,
-        timestamp: localTransaction.timestamp.toISOString()
+        timestamp: Math.floor(localTransaction.timestamp.getTime() / 1000) // Convert Date to Unix seconds
       };
     }
 
@@ -97,7 +97,7 @@ export class TransactionService {
       status: tx.status,
       transaction: tx.encoded_transaction,
       metadata: tx.json_metadata,
-      timestamp: tx.timestamp.toISOString()
+      timestamp: Math.floor(tx.timestamp.getTime() / 1000) // Convert Date to Unix seconds
     }));
   }
 

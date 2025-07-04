@@ -22,7 +22,7 @@ export interface VerificationResult {
 export interface TransactionResponse {
   tx_id: string;
   status: string;
-  timestamp?: string;
+  timestamp?: number; // Unix timestamp in seconds
 }
 
 export interface TransactionDetails {
@@ -30,7 +30,7 @@ export interface TransactionDetails {
   status: string;
   transaction?: string;
   metadata?: Record<string, any> | string | number | boolean | null;
-  timestamp?: string;
+  timestamp?: number; // Unix timestamp in seconds
 }
 
 // Configuration types

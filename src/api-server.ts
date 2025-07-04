@@ -50,13 +50,13 @@ app.get('/health', async (req: any, res: any) => {
         running: cleanupStats.running,
         interval_seconds: cleanupStats.config.intervalMs / 1000
       },
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
   } catch (error: any) {
     res.status(500).json({
       status: 'unhealthy',
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
   }
 });
@@ -111,7 +111,7 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
           status: 'confirmed',
           source: 'node',
           ...nodeTransaction,
-          timestamp: new Date().toISOString()
+          timestamp: Math.floor(Date.now() / 1000)
         });
       }
     } catch (nodeError: any) {
@@ -137,7 +137,7 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
       success: false,
       error: 'Transaction not found',
       tx_id,
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
     
   } catch (error: any) {
