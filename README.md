@@ -254,9 +254,12 @@ The service supports **free-format metadata** to accommodate different wallet im
 
 ### Metadata Preservation
 - Metadata is stored exactly as provided
-- No validation or transformation is performed
+- No validation or transformation is performed (see TODO section)
 - Retrieved transactions return metadata in the same format
 - Supports any JSON-serializable data structure
+
+### Current Verification Status
+⚠️ **Note**: The verification layer currently accepts all transactions as a stub implementation. Future enhancement will include verification of metadata against encoded transaction data to ensure consistency and prevent spoofing.
 
 ## Mempool Cleanup Process
 
@@ -286,3 +289,17 @@ Check cleanup process status:
 ```bash
 curl http://localhost:3000/api/cleanup/status
 ```
+
+## TODO / Future Enhancements
+
+### Transaction Verification
+- **TODO**: Implement verification layer to compare transaction metadata against encoded transaction
+- **Purpose**: Ensure consistency between JSON metadata and the actual encoded transaction data
+- **Examples**:
+  - Verify that `metadata.amount` matches the amount in the encoded transaction
+  - Verify that `metadata.recipient` matches the recipient address in the transaction
+  - Verify that `metadata.fee` matches the calculated transaction fee
+  - Detect discrepancies between claimed and actual transaction parameters
+- **Implementation**: Update `src/verification.ts` with actual verification logic using transaction parsing library
+- **Security**: Prevents metadata spoofing and ensures data integrity
+- **Current Status**: Verification layer exists as stub (allows all transactions)
