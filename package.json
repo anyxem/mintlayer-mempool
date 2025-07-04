@@ -10,6 +10,7 @@
     "dev:watch": "nodemon --exec ts-node index.ts",
     "pm2:dev": "pm2 start ecosystem.config.js --only mintlayer-wallet-mempool-dev",
     "pm2:prod": "npm run build && pm2 start ecosystem.config.js --only mintlayer-wallet-mempool-prod --env production",
+    "pm2:prod:setup": "cp .env.production.example .env.production && echo 'Please edit .env.production with your production values'",
     "pm2:stop": "pm2 stop ecosystem.config.js",
     "pm2:restart": "pm2 restart ecosystem.config.js",
     "pm2:logs": "pm2 logs",
@@ -33,6 +34,7 @@
     "@types/express": "^5.0.3",
     "@types/sqlite3": "^5.1.0",
     "axios": "^1.10.0",
+    "dotenv": "^17.0.1",
     "express": "^5.1.0",
     "sqlite3": "^5.1.7"
   }

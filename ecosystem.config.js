@@ -28,13 +28,12 @@ module.exports = {
       name: 'mintlayer-wallet-mempool-prod',
       script: 'dist/index.js',
       watch: false,
+      env_file: '.env.production', // Load production environment from file
       env: {
-        NODE_ENV: 'production',
-        PORT: 3000
+        NODE_ENV: 'production'
       },
       env_production: {
-        NODE_ENV: 'production',
-        PORT: 3000
+        NODE_ENV: 'production'
       },
       error_file: './logs/prod-err.log',
       out_file: './logs/prod-out.log',

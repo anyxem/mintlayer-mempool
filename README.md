@@ -43,6 +43,15 @@ npm run pm2:dev
 
 ### Production Mode
 
+#### Setup production environment
+```bash
+# Copy example environment file
+npm run pm2:prod:setup
+
+# Edit with your production values
+nano .env.production
+```
+
 #### Build and run with PM2
 ```bash
 npm run pm2:prod
@@ -82,9 +91,40 @@ pm2 delete mintlayer-wallet-mempool-dev
 pm2 delete mintlayer-wallet-mempool-prod
 ```
 
-## Environment Variables
+## Environment Configuration
 
-### Core Configuration
+### Development Mode
+Development mode uses default environment variables and doesn't require an `.env` file.
+
+### Production Mode
+Production mode uses `.env.production` file for configuration.
+
+#### Setup Production Environment
+```bash
+# Create production environment file
+npm run pm2:prod:setup
+
+# Edit with your values
+nano .env.production
+```
+
+#### Example .env.production
+```bash
+NODE_ENV=production
+PORT=3000
+NODE_POST_TRANSACTION_URL=https://node.mintlayer.org/api/submit
+NODE_GET_TRANSACTION_URL=https://node.mintlayer.org/api/tx
+DB_PATH=/var/lib/wallet-mempool/transactions.db
+LOG_LEVEL=info
+CLEANUP_ENABLED=true
+CLEANUP_INTERVAL_MS=300000
+CLEANUP_BATCH_SIZE=50
+CLEANUP_MAX_AGE_HOURS=24
+```
+
+### Environment Variables Reference
+
+#### Core Configuration
 - `NODE_ENV`: Set to 'development' or 'production'
 - `PORT`: Server port (default: 3000)
 - `NODE_POST_TRANSACTION_URL`: Mintlayer node URL for submitting transactions
@@ -92,7 +132,7 @@ pm2 delete mintlayer-wallet-mempool-prod
 - `DB_PATH`: Database file path (default: ./data/transactions.db)
 - `LOG_LEVEL`: Logging level (debug, info, warn, error)
 
-### Cleanup Configuration
+#### Cleanup Configuration
 - `CLEANUP_ENABLED`: Enable/disable automatic cleanup (default: true)
 - `CLEANUP_INTERVAL_MS`: Cleanup interval in milliseconds (default: 300000 = 5 minutes)
 - `CLEANUP_BATCH_SIZE`: Number of transactions to check per batch (default: 50)
@@ -289,6 +329,77 @@ Check cleanup process status:
 ```bash
 curl http://localhost:3000/api/cleanup/status
 ```
+
+## Production Deployment
+
+### Bare Metal Server with PM2
+
+#### 1. Server Setup
+```bash
+# Clone repository
+git clone <repository-url>
+cd wallet-mempool
+
+# Install dependencies
+npm install
+
+# Setup production environment
+npm run pm2:prod:setup
+
+# Edit production configuration
+nano .env.production
+```
+
+#### 2. Configure Environment
+Update `.env.production` with your production values:
+```bash
+NODE_ENV=production
+PORT=3000
+NODE_POST_TRANSACTION_URL=https://your-mintlayer-node.com/api/submit
+NODE_GET_TRANSACTION_URL=https://your-mintlayer-node.com/api/tx
+DB_PATH=/var/lib/wallet-mempool/transactions.db
+LOG_LEVEL=warn
+CLEANUP_ENABLED=true
+CLEANUP_INTERVAL_MS=300000
+```
+
+#### 3. Deploy
+```bash
+# Build application
+npm run build
+
+# Start with PM2
+npm run pm2:prod
+
+# Setup auto-startup
+pm2 startup
+pm2 save
+```
+
+#### 4. Management Commands
+```bash
+# View status
+pm2 status
+
+# View logs
+pm2 logs mintlayer-wallet-mempool-prod
+
+# Restart
+pm2 restart mintlayer-wallet-mempool-prod
+
+# Stop
+pm2 stop mintlayer-wallet-mempool-prod
+
+# Monitor
+pm2 monit
+```
+
+### Security Considerations
+- ✅ `.env.production` is excluded from git
+- ✅ Use proper file permissions: `chmod 600 .env.production`
+- ✅ Run as dedicated user, not root
+- ✅ Use reverse proxy (nginx) for SSL termination
+- ✅ Configure firewall to restrict access
 
 ## TODO / Future Enhancements
 

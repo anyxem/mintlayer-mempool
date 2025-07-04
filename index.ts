@@ -1,3 +1,8 @@
+// Load environment variables for production
+if (process.env.NODE_ENV === 'production') {
+  require('dotenv').config({ path: '.env.production' });
+}
+
 import { startServer } from './src/api-server';
 import { transactionDb } from './src/database';
 import { mempoolCleaner } from './src/mempool-cleaner';
