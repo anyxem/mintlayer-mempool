@@ -90,7 +90,7 @@ app.post('/api/transaction', async (req: any, res: any) => {
     res.status(400).json({
       success: false,
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
   }
 });
@@ -145,7 +145,7 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
   }
 });
@@ -162,7 +162,7 @@ app.get('/api/transactions/pending', async (req: any, res: any) => {
       success: true,
       count: pendingTransactions.length,
       transactions: pendingTransactions,
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
     
   } catch (error: any) {
@@ -170,7 +170,7 @@ app.get('/api/transactions/pending', async (req: any, res: any) => {
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
   }
 });
@@ -183,7 +183,7 @@ app.get('/api/cleanup/status', async (req: any, res: any) => {
     res.json({
       success: true,
       cleanup: stats,
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
 
   } catch (error: any) {
@@ -191,7 +191,7 @@ app.get('/api/cleanup/status', async (req: any, res: any) => {
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
   }
 });
@@ -207,7 +207,7 @@ app.post('/api/cleanup/run', async (req: any, res: any) => {
       success: true,
       message: 'Cleanup completed',
       result,
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
 
   } catch (error: any) {
@@ -215,7 +215,7 @@ app.post('/api/cleanup/run', async (req: any, res: any) => {
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: Math.floor(Date.now() / 1000)
     });
   }
 });
