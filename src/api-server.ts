@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import type { Request, Response, NextFunction } from 'express';
 import { config, validateConfig } from './config';
 import { transactionDb } from './database';
@@ -7,6 +8,18 @@ import { NodeClient } from './node-client';
 import { mempoolCleaner } from './mempool-cleaner';
 
 const app = express();
+
+// CORS middleware - configurable origins
+const corsOrigins = config.corsOrigins
+  ? config.corsOrigins.split(',').map(origin => origin.trim())
+  : true; // Allow all origins if not specified
+
+app.use(cors({
+  origin: corsOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true
+}));
 
 // Middleware for parsing different content types
 app.use(express.json({ limit: '10mb' }));

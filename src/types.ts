@@ -40,6 +40,7 @@ export interface Config {
   nodeGetTransactionUrl?: string; // separate URL for GET requests if different
   dbPath: string;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
+  corsOrigins?: string; // comma-separated list of allowed origins
 }
 
 // Node communication types

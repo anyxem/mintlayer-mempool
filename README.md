@@ -116,6 +116,7 @@ NODE_POST_TRANSACTION_URL=https://node.mintlayer.org/api/submit
 NODE_GET_TRANSACTION_URL=https://node.mintlayer.org/api/tx
 DB_PATH=/var/lib/wallet-mempool/transactions.db
 LOG_LEVEL=info
+CORS_ORIGINS=https://wallet.mintlayer.org,https://explorer.mintlayer.org
 CLEANUP_ENABLED=true
 CLEANUP_INTERVAL_MS=300000
 CLEANUP_BATCH_SIZE=50
@@ -131,6 +132,9 @@ CLEANUP_MAX_AGE_HOURS=24
 - `NODE_GET_TRANSACTION_URL`: Mintlayer node URL for querying transactions (optional)
 - `DB_PATH`: Database file path (default: ./data/transactions.db)
 - `LOG_LEVEL`: Logging level (debug, info, warn, error)
+
+#### CORS Configuration
+- `CORS_ORIGINS`: Comma-separated list of allowed origins (optional, default: all origins allowed)
 
 #### Cleanup Configuration
 - `CLEANUP_ENABLED`: Enable/disable automatic cleanup (default: true)
