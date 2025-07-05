@@ -101,10 +101,18 @@ export class MempoolCleaner {
       console.log(`📋 Found ${pendingTransactions.length} pending transactions to check`);
 
       // Filter transactions by age (don't check very old ones repeatedly)
-      const cutoffTime = new Date(Date.now() - (this.cleanupConfig.maxAge * 60 * 60 * 1000));
-      const transactionsToCheck = pendingTransactions.filter(tx => 
-        new Date(tx.timestamp!) > cutoffTime
-      );
+      // Work in Unix seconds consistently
+      const currentTimeSeconds = Math.floor(Date.now() / 1000);
+      const cutoffTimeSeconds = currentTimeSeconds - (this.cleanupConfig.maxAge * 60 * 60);
+
+      console.log(`🕐 Current time: ${currentTimeSeconds}, Cutoff time: ${cutoffTimeSeconds} (${this.cleanupConfig.maxAge}h ago)`);
+
+      const transactionsToCheck = pendingTransactions.filter(tx => {
+        const txTimeSeconds = tx.timestamp!; // Already in Unix seconds from API
+        const ageHours = (currentTimeSeconds - txTimeSeconds) / 3600;
+        console.log(`📅 TX ${tx.tx_id}: ${txTimeSeconds} (${ageHours.toFixed(1)}h old) - ${txTimeSeconds > cutoffTimeSeconds ? 'KEEP' : 'FILTER'}`);
+        return txTimeSeconds > cutoffTimeSeconds;
+      });
 
       if (transactionsToCheck.length < pendingTransactions.length) {
         console.log(`⏰ Filtered out ${pendingTransactions.length - transactionsToCheck.length} old transactions`);
