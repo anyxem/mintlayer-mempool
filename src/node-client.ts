@@ -28,7 +28,7 @@ export class NodeClient {
       
       // Handle different response formats from the node
       let nodeResponse: NodeSubmitResponse;
-      
+
       if (typeof response.data === 'string') {
         // If response is just a string (tx_id)
         nodeResponse = { tx_id: response.data.trim() };
@@ -39,7 +39,7 @@ export class NodeClient {
         throw new Error('Unexpected response format from node');
       }
 
-      console.log(`🆔 Transaction ID: ${nodeResponse.tx_id || nodeResponse.txid}`);
+      console.log(`🆔 Transaction ID: ${nodeResponse.tx_id || nodeResponse.txid || nodeResponse.id}`);
       return nodeResponse;
 
     } catch (error: any) {

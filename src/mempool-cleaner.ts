@@ -170,15 +170,19 @@ export class MempoolCleaner {
         
         // Check if transaction is confirmed on the node
         const nodeTransaction = await NodeClient.getTransaction(tx.tx_id);
-        
+
         if (nodeTransaction) {
           // Transaction is confirmed, remove from mempool
           console.log(`✅ Transaction confirmed: ${tx.tx_id}`);
+          console.log(`🔍 Node response fields: ${Object.keys(nodeTransaction).join(', ')}`);
           confirmed++;
-          
+
           const wasRemoved = await this.transactionService.removeConfirmedTransaction(tx.tx_id);
           if (wasRemoved) {
             removed++;
+            console.log(`🗑️ Successfully removed from mempool: ${tx.tx_id}`);
+          } else {
+            console.log(`⚠️ Failed to remove from mempool: ${tx.tx_id}`);
           }
         } else {
           // Transaction still pending, keep in mempool

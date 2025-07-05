@@ -47,6 +47,7 @@ export interface Config {
 export interface NodeSubmitResponse {
   tx_id?: string;
   txid?: string; // some nodes use different field names
+  id?: string; // Mintlayer node uses 'id'
   result?: string;
   error?: string;
 }
@@ -54,6 +55,7 @@ export interface NodeSubmitResponse {
 export interface NodeGetResponse {
   tx_id?: string;
   txid?: string;
+  id?: string; // Mintlayer node uses 'id'
   transaction?: string;
   confirmations?: number;
   status?: string;

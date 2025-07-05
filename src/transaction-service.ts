@@ -17,9 +17,10 @@ export class TransactionService {
     console.log('🔄 Processing transaction submission...');
     
     // Extract tx_id from node response (handle different field names)
-    const tx_id = nodeResponse.tx_id || nodeResponse.txid || nodeResponse.result;
-    
+    const tx_id = nodeResponse.tx_id || nodeResponse.txid || nodeResponse.id || nodeResponse.result;
+
     if (!tx_id) {
+      console.log('🔍 Node response fields:', Object.keys(nodeResponse));
       throw new Error('No transaction ID received from node');
     }
 
