@@ -11,11 +11,7 @@ async function testDatabase() {
     // Test data
     const testTransaction = {
       transaction: '0100000001a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890000000006a47304402203e4516da7253cf068effec6b95c41221c0cf3a8e6ccb8cbf1725b562e9afde2c022054e1c258c2981cdfba5df64e841288f76c5c8e8c1c1e1c1e1c1e1c1e1c1e1c1e012103ad1d8e89212f0b92c74d23bb710c00662451716a435b97381a1a2e4a98f5d9b1ffffffff0100e1f50500000000196a17a91489abcdefabbaabbaabbaabbaabbaabbaabbaabba8700000000',
-      metadata: {
-        amount: 100000000,
-        recipient: 'test-address',
-        fee: 1000
-      }
+      // No metadata for this test
     };
 
     const mockNodeResponse = {

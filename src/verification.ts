@@ -1,4 +1,4 @@
-import { VerificationResult } from './types';
+import { VerificationResult, TransactionMetadata } from './types';
 
 /**
  * Verification layer for transaction validation
@@ -21,25 +21,11 @@ export class TransactionVerifier {
    * @param metadata - Optional metadata in any format to verify against
    * @returns Verification result
    */
-  static verifyTransaction(encodedTx: string, metadata?: Record<string, any> | string | number | boolean | null): VerificationResult {
-    // TODO: Implement actual verification logic using the verification library
-    // Steps needed:
-    // 1. Parse encodedTx to extract transaction details (inputs, outputs, fees)
-    // 2. If metadata contains amount/recipient/fee fields, verify against parsed data
-    // 3. Return specific errors for any mismatches found
-    // 4. Allow transactions with no metadata or non-conflicting metadata
-    // For now, this is a stub that allows everything
-    
+  static verifyTransaction(encodedTx: string, metadata?: TransactionMetadata): VerificationResult {
     console.log('🔍 Verifying transaction...');
     console.log(`   Encoded TX length: ${encodedTx.length} chars`);
     console.log(`   Has metadata: ${!!metadata}`);
-    if (metadata) {
-      console.log(`   Metadata type: ${typeof metadata}`);
-      if (typeof metadata === 'object' && metadata !== null) {
-        console.log(`   Metadata keys: ${Object.keys(metadata).length}`);
-      }
-    }
-    
+
     // Basic validation - check if transaction is hex string
     if (!this.isValidHex(encodedTx)) {
       return {
@@ -47,9 +33,20 @@ export class TransactionVerifier {
         errors: ['Transaction must be a valid hex string']
       };
     }
-    
-    // Stub: Always return valid for now
-    console.log('✅ Transaction verification passed (stub)');
+
+    // Phase 1: Shallow metadata validation (if metadata is provided)
+    if (metadata) {
+      console.log('   🔍 Performing shallow metadata validation...');
+      const metadataValidation = this.validateMetadataStructure(metadata);
+
+      if (!metadataValidation.isValid) {
+        console.log('   ❌ Metadata validation failed');
+        return metadataValidation;
+      }
+      console.log('   ✅ Metadata structure validation passed');
+    }
+
+    console.log('✅ Transaction verification passed');
     return {
       isValid: true
     };
@@ -64,6 +61,52 @@ export class TransactionVerifier {
     }
     return /^[0-9a-fA-F]+$/.test(str);
   }
+
+  /**
+   * Phase 1: Shallow validation of metadata structure
+   * Validates that the 4 required fields are present and have correct basic structure
+   */
+  private static validateMetadataStructure(metadata: TransactionMetadata): VerificationResult {
+    const errors: string[] = [];
+
+    // Validate inputs field
+    if (!Array.isArray(metadata.inputs)) {
+      errors.push('inputs must be an array');
+    } else if (metadata.inputs.length === 0) {
+      errors.push('inputs array cannot be empty');
+    }
+
+    // Validate outputs field
+    if (!Array.isArray(metadata.outputs)) {
+      errors.push('outputs must be an array');
+    } else if (metadata.outputs.length === 0) {
+      errors.push('outputs array cannot be empty');
+    }
+
+    // Validate fee field
+    if (!metadata.fee || typeof metadata.fee !== 'object') {
+      errors.push('fee must be an object');
+    } else {
+      if (!metadata.fee.atoms || typeof metadata.fee.atoms !== 'string') {
+        errors.push('fee.atoms must be a string');
+      }
+      if (!metadata.fee.decimal || typeof metadata.fee.decimal !== 'string') {
+        errors.push('fee.decimal must be a string');
+      }
+    }
+
+    // Validate id field
+    if (!metadata.id || typeof metadata.id !== 'string') {
+      errors.push('id must be a string');
+    } else if (metadata.id.length === 0) {
+      errors.push('id cannot be empty');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors.length > 0 ? errors : undefined
+    };
+  }
   
   /**
    * Placeholder for future verification methods
@@ -76,7 +119,7 @@ export class TransactionVerifier {
     return { isValid: true };
   }
 
-  static verifyMetadataConsistency(encodedTx: string, metadata: Record<string, any> | string | number | boolean | null): VerificationResult {
+  static verifyMetadataConsistency(encodedTx: string, metadata: TransactionMetadata): VerificationResult {
     // TODO: Implement metadata consistency checks
     // - Parse transaction to extract actual values
     // - Compare with metadata fields if they exist

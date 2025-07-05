@@ -42,7 +42,7 @@ async function testCleanupFix() {
         // Process transaction with the test node response
         const result = await service.processTransaction({
           transaction: `deadbeef${i.toString().padStart(8, '0')}`,
-          metadata: { test: testCase.name }
+          // No metadata for this test
         }, testCase.nodeResponse);
 
         console.log(`   ✅ Transaction processed: ${result.tx_id}`);
@@ -76,7 +76,7 @@ async function testCleanupFix() {
     try {
       const result = await service.processTransaction({
         transaction: 'deadbeef12345678',
-        metadata: { test: 'priority test' }
+        // No metadata for this test
       }, multiFieldResponse);
 
       console.log(`✅ Priority test result: ${result.tx_id}`);

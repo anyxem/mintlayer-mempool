@@ -24,11 +24,11 @@ async function testCleanup() {
     const testTransactions = [
       {
         transaction: 'deadbeef',
-        metadata: { test: 'transaction1' }
+        // No metadata for this test
       },
       {
         transaction: 'cafebabe',
-        metadata: { test: 'transaction2' }
+        // No metadata for this test
       }
     ];
 

@@ -1,8 +1,8 @@
 import { TransactionService } from './transaction-service';
 import { transactionDb } from './database';
 
-async function testMetadataFlexibility() {
-  console.log('🧪 Testing flexible metadata handling...\n');
+async function testStandardizedMetadata() {
+  console.log('🧪 Testing standardized metadata handling...\n');
 
   try {
     // Initialize database
@@ -10,81 +10,47 @@ async function testMetadataFlexibility() {
 
     const service = new TransactionService();
 
-    // Test different metadata formats
+    // Test standardized metadata format
     const testCases = [
       {
-        name: 'Object metadata',
+        name: 'Valid standardized metadata',
         transaction: 'deadbeef01234567',
         metadata: {
-          amount: 100000000,
-          recipient: 'ml1qw508d6qejxtdg4y5r3zarvary0c5xw7k8txqgv',
-          fee: 1000,
-          memo: 'Payment for services',
-          tags: ['payment', 'service'],
-          custom_data: {
-            invoice_id: 'INV-2025-001',
-            customer_id: 12345
-          }
+          inputs: [{
+            input: {
+              index: 0,
+              source_type: 0,
+              source_id: '513932890fb1fee9b21d3004d4292e7eace8753f43d601013d635b8b1195f207',
+              input_type: 'UTXO',
+            },
+            utxo: {
+              type: 'Transfer',
+              destination: 'tmt1q9l0g4kd3s6x5rmesaznegz06pw9hxu6qvqu3pa7',
+              value: {
+                amount: { atoms: '1000000000000', decimal: '10' },
+                type: 'Coin',
+              },
+            },
+          }],
+          outputs: [{
+            type: 'Transfer',
+            destination: 'tmt1qxrwc3gy2lgf4kvqwwfa388vn3cavgrqyyrgswe6',
+            value: {
+              type: 'Coin',
+              amount: { decimal: '10', atoms: '1000000000000' },
+            },
+          }],
+          fee: { atoms: '34500000000', decimal: '0.345' },
+          id: '63c90b6d244cdf901322fa7e75fb6499a8e7a30152d573626e5a10b06befe65a',
         }
-      },
-      {
-        name: 'String metadata',
-        transaction: 'cafebabe01234567',
-        metadata: 'Simple string metadata for transaction'
-      },
-      {
-        name: 'Number metadata',
-        transaction: 'beefdead01234567',
-        metadata: 42
-      },
-      {
-        name: 'Boolean metadata',
-        transaction: 'abcdef0123456789',
-        metadata: true
-      },
-      {
-        name: 'Null metadata',
-        transaction: 'fedcba9876543210',
-        metadata: null
       },
       {
         name: 'No metadata',
         transaction: '1234567890abcdef',
         metadata: undefined
       },
-      {
-        name: 'Complex nested object',
-        transaction: '9876543210fedcba',
-        metadata: {
-          transaction_type: 'transfer',
-          wallet_info: {
-            version: '2.1.0',
-            platform: 'web',
-            user_agent: 'Mozilla/5.0...'
-          },
-          routing: {
-            source_exchange: 'ExchangeA',
-            destination_exchange: 'ExchangeB',
-            intermediate_hops: ['HopA', 'HopB']
-          },
-          compliance: {
-            kyc_verified: true,
-            aml_check: 'passed',
-            risk_score: 0.15
-          },
-          timestamps: {
-            created: '2025-07-03T21:00:00Z',
-            signed: '2025-07-03T21:00:05Z',
-            submitted: '2025-07-03T21:00:10Z'
-          }
-        }
-      },
-      {
-        name: 'Array as metadata',
-        transaction: 'aabbccdd11223344',
-        metadata: ['tag1', 'tag2', 'tag3', { priority: 'high' }]
-      }
     ];
+
 
     console.log(`📋 Testing ${testCases.length} different metadata formats...\n`);
 
@@ -226,7 +192,7 @@ async function testMetadataFlexibility() {
 
 // Run tests if this file is executed directly
 if (require.main === module) {
-  testMetadataFlexibility();
+  testStandardizedMetadata();
 }
 
-export { testMetadataFlexibility };
+export { testStandardizedMetadata };
