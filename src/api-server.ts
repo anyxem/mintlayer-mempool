@@ -66,25 +66,25 @@ app.post('/api/transaction', async (req: any, res: any) => {
   try {
     const contentType = req.get('Content-Type') || '';
     console.log(`📝 Processing transaction submission (${contentType})`);
-    
+
     // Parse the transaction request
     const transactionRequest = TransactionService.parseTransactionRequest(req.body, contentType);
     console.log(`🔍 Parsed transaction: ${transactionRequest.transaction.length} chars, metadata: ${!!transactionRequest.metadata}`);
-    
+
     // Submit to node first
     const nodeResponse = await NodeClient.submitTransaction(transactionRequest.transaction);
-    
+
     // Process and store the transaction
     const service = new TransactionService();
     const result = await service.processTransaction(transactionRequest, nodeResponse);
-    
+
     res.status(201).json({
       success: true,
       tx_id: result.tx_id,
       status: result.status,
       timestamp: result.timestamp
     });
-    
+
   } catch (error: any) {
     console.error('❌ Transaction submission failed:', error.message);
     res.status(400).json({
@@ -100,7 +100,7 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
   try {
     const { tx_id } = req.params;
     console.log(`🔍 Looking up transaction: ${tx_id}`);
-    
+
     // First, try to get from node (confirmed transactions)
     try {
       const nodeTransaction = await NodeClient.getTransaction(tx_id);
@@ -111,18 +111,17 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
           status: 'confirmed',
           source: 'node',
           ...nodeTransaction,
-          timestamp: Math.floor(Date.now() / 1000)
         });
       }
     } catch (nodeError: any) {
       console.warn(`⚠️ Node lookup failed for ${tx_id}:`, nodeError.message);
       // Continue to local storage fallback
     }
-    
+
     // Fallback to local storage (mempool)
     const service = new TransactionService();
     const localTransaction = await service.getTransactionDetails(tx_id);
-    
+
     if (localTransaction) {
       console.log(`✅ Found transaction in mempool: ${tx_id}`);
       return res.json({
@@ -130,7 +129,7 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
         source: 'mempool'
       });
     }
-    
+
     // Not found anywhere
     console.log(`❓ Transaction not found: ${tx_id}`);
     res.status(404).json({
@@ -139,7 +138,7 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
       tx_id,
       timestamp: Math.floor(Date.now() / 1000)
     });
-    
+
   } catch (error: any) {
     console.error('❌ Transaction lookup failed:', error.message);
     res.status(500).json({
@@ -154,17 +153,17 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
 app.get('/api/transactions/pending', async (req: any, res: any) => {
   try {
     console.log('📋 Retrieving pending transactions');
-    
+
     const service = new TransactionService();
     const pendingTransactions = await service.getPendingTransactions();
-    
+
     res.json({
       success: true,
       count: pendingTransactions.length,
       transactions: pendingTransactions,
       timestamp: Math.floor(Date.now() / 1000)
     });
-    
+
   } catch (error: any) {
     console.error('❌ Failed to get pending transactions:', error.message);
     res.status(500).json({
@@ -224,7 +223,7 @@ export async function startServer(): Promise<void> {
   try {
     // Validate configuration
     validateConfig();
-    
+
     // Initialize database
     await transactionDb.initialize();
 
@@ -244,7 +243,7 @@ export async function startServer(): Promise<void> {
       console.log('   POST /api/cleanup/run - Manual cleanup trigger');
       console.log('   GET  /health - Health check');
     });
-    
+
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);
