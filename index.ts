@@ -4,21 +4,16 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 import { startServer } from './src/api-server';
-import { transactionDb } from './src/database';
-import { mempoolCleaner } from './src/mempool-cleaner';
+import { webSocketClient } from './src/websocket-client';
 
 // Graceful shutdown handler
 async function gracefulShutdown(signal: string) {
   console.log(`🛑 ${signal} received, shutting down gracefully`);
 
   try {
-    // Stop mempool cleaner
-    mempoolCleaner.stop();
-    console.log('✅ Mempool cleaner stopped');
-
-    // Close database connection
-    await transactionDb.close();
-    console.log('✅ Database connection closed');
+    // Close WebSocket connection
+    await webSocketClient.close();
+    console.log('✅ WebSocket connection closed');
 
     console.log('✅ Graceful shutdown completed');
     process.exit(0);

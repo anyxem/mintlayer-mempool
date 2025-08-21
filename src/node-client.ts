@@ -1,83 +1,25 @@
 import axios, { AxiosResponse } from 'axios';
 import { config } from './config';
-import { NodeSubmitResponse, NodeGetResponse } from './types';
+import { NodeGetResponse } from './types';
 
 export class NodeClient {
 
   /**
-   * Submit a transaction to the Mintlayer node
-   * @param encodedTransaction - Hex-encoded transaction
-   * @returns Node response with tx_id
-   */
-  static async submitTransaction(encodedTransaction: string): Promise<NodeSubmitResponse> {
-    console.log(`📤 Submitting transaction to node: ${config.nodePostTransactionUrl}`);
-
-    try {
-      const response: AxiosResponse = await axios.post(
-        config.nodePostTransactionUrl,
-        encodedTransaction,
-        {
-          headers: {
-            'Content-Type': 'text/plain',
-          },
-          timeout: 30000, // 30 second timeout
-        }
-      );
-
-      console.log(`✅ Node response received:`, response.status);
-
-      // Handle different response formats from the node
-      let nodeResponse: NodeSubmitResponse;
-
-      if (typeof response.data === 'string') {
-        // If response is just a string (tx_id)
-        nodeResponse = { tx_id: response.data.trim() };
-      } else if (typeof response.data === 'object') {
-        // If response is JSON object
-        nodeResponse = response.data;
-      } else {
-        throw new Error('Unexpected response format from node');
-      }
-
-      console.log(`🆔 Transaction ID: ${nodeResponse.tx_id || nodeResponse.txid || nodeResponse.id}`);
-      return nodeResponse;
-
-    } catch (error: any) {
-      console.error('❌ Failed to submit transaction to node:', error.message);
-
-      if (error.response) {
-        console.error('   Status:', error.response.status);
-        console.error('   Data:', error.response.data);
-        if(error.response.data.error.includes('Orphans not supported')) {
-          console.error('   Error:', error.response.data.error);
-          throw new Error(`This transaction used UTXO from unconfirmed transaction. Please refetch the UTXO and try again.`);
-        }
-        if(error.response.data.error.includes('print money')) {
-          console.error('   Error:', error.response.data.error);
-          throw new Error(`This transaction is trying to print money. Check your inputs and outputs and try again.`);
-        }
-
-        throw new Error(`Node error (${error.response.status}): ${error.response.data.error}`);
-      } else if (error.request) {
-        throw new Error('No response from node - check node URL and connectivity');
-      } else {
-        throw new Error(`Request setup error: ${error.message}`);
-      }
-    }
-  }
-
-  /**
-   * Get transaction details from the Mintlayer node
+   * Get transaction details from the Mintlayer node (confirmed transactions)
    * @param tx_id - Transaction ID to lookup
    * @returns Node response with transaction details or null if not found
    */
   static async getTransaction(tx_id: string): Promise<NodeGetResponse | null> {
-    const getUrl = config.nodeGetTransactionUrl || config.nodePostTransactionUrl;
-    console.log(`📥 Getting transaction from node: ${getUrl}/${tx_id}`);
+    if (!config.nodeGetTransactionUrl) {
+      console.log('⚠️ Node GET URL not configured, skipping confirmed transaction lookup');
+      return null;
+    }
+
+    console.log(`📥 Getting confirmed transaction from node: ${config.nodeGetTransactionUrl}/${tx_id}`);
 
     try {
       const response: AxiosResponse = await axios.get(
-        `${getUrl}/${tx_id}`,
+        `${config.nodeGetTransactionUrl}/${tx_id}`,
         {
           timeout: 15000, // 15 second timeout
         }
@@ -87,22 +29,13 @@ export class NodeClient {
       return response.data;
 
     } catch (error: any) {
-      if (error.response && error.response.status === 404) {
+      if (error.response?.status === 404) {
         console.log(`🔍 Transaction not found on node: ${tx_id}`);
         return null;
       }
-
-      console.error('❌ Failed to get transaction from node:', error.message);
-
-      if (error.response) {
-        console.error('   Status:', error.response.status);
-        console.error('   Data:', error.response.data);
-        throw new Error(`Node error (${error.response.status}): ${error.response.data}`);
-      } else if (error.request) {
-        throw new Error('No response from node - check node URL and connectivity');
-      } else {
-        throw new Error(`Request setup error: ${error.message}`);
-      }
+      
+      console.error(`❌ Node GET request failed for ${tx_id}:`, error.message);
+      throw error;
     }
   }
 
@@ -110,11 +43,16 @@ export class NodeClient {
    * Check if the node is reachable
    */
   static async healthCheck(): Promise<boolean> {
+    if (!config.nodeGetTransactionUrl) {
+      console.log('⚠️ Node GET URL not configured, skipping health check');
+      return false;
+    }
+
     try {
-      console.log(`🏥 Checking node health: ${config.nodePostTransactionUrl}`);
+      console.log(`🏥 Checking node health: ${config.nodeGetTransactionUrl}`);
 
       // Try a simple request to check connectivity
-      const response = await axios.get(config.nodePostTransactionUrl, {
+      const response = await axios.get(config.nodeGetTransactionUrl, {
         timeout: 5000,
         validateStatus: () => true // Accept any status code
       });

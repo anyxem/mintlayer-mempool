@@ -2,23 +2,21 @@ import { Config } from './types';
 
 export const config: Config = {
   port: parseInt(process.env.PORT || '3000'),
-  nodePostTransactionUrl: process.env.NODE_POST_TRANSACTION_URL || 'http://localhost:3031', // default Mintlayer node
-  nodeGetTransactionUrl: process.env.NODE_GET_TRANSACTION_URL, // optional separate GET endpoint
-  dbPath: process.env.DB_PATH || './data/transactions.db',
+  nodeWebSocketUrl: process.env.NODE_WEBSOCKET_URL || 'ws://user:user@localhost:13030', // default Mintlayer node WebSocket with auth
+  nodeGetTransactionUrl: process.env.NODE_GET_TRANSACTION_URL, // optional HTTP endpoint for confirmed transactions
   logLevel: (process.env.LOG_LEVEL as Config['logLevel']) || 'info',
   corsOrigins: process.env.CORS_ORIGINS // optional CORS origins
 };
 
 export function validateConfig(): void {
-  if (!config.nodePostTransactionUrl) {
-    throw new Error('NODE_POST_TRANSACTION_URL environment variable is required');
+  if (!config.nodeWebSocketUrl) {
+    throw new Error('NODE_WEBSOCKET_URL environment variable is required');
   }
 
   console.log('📋 Configuration loaded:');
   console.log(`   Port: ${config.port}`);
-  console.log(`   Node POST URL: ${config.nodePostTransactionUrl}`);
-  console.log(`   Node GET URL: ${config.nodeGetTransactionUrl || 'same as POST URL'}`);
-  console.log(`   Database: ${config.dbPath}`);
+  console.log(`   Node WebSocket URL: ${config.nodeWebSocketUrl}`);
+  console.log(`   Node GET URL: ${config.nodeGetTransactionUrl || 'not configured'}`);
   console.log(`   Log Level: ${config.logLevel}`);
   console.log(`   CORS Origins: ${config.corsOrigins || 'all origins allowed'}`);
 }

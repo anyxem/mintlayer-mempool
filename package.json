@@ -15,12 +15,9 @@
     "pm2:restart": "pm2 restart ecosystem.config.js",
     "pm2:logs": "pm2 logs",
     "pm2:monitor": "pm2 monit",
-    "test:db": "npx ts-node src/test-database.ts",
     "test:api": "npx ts-node src/test-api.ts",
-    "test:cleanup": "npx ts-node src/test-cleanup.ts",
-    "test:cleanup-fix": "npx ts-node src/test-cleanup-fix.ts",
-    "test:metadata": "npx ts-node src/test-metadata.ts",
-    "test": "npm run test:db && echo \"\\n\" && npm run test:metadata && echo \"\\n\" && npm run test:cleanup"
+    "test:websocket": "npx ts-node src/test-websocket.ts",
+    "test": "npm run test:websocket"
   },
   "keywords": [],
   "author": "",
@@ -34,11 +31,11 @@
   "dependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/sqlite3": "^5.1.0",
+    "@types/ws": "^8.18.1",
     "axios": "^1.10.0",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
-    "sqlite3": "^5.1.7"
+    "ws": "^8.18.3"
   }
 }
