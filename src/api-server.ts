@@ -4,6 +4,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { config, validateConfig } from './config';
 import { webSocketClient } from './websocket-client';
 import { NodeClient } from './node-client';
+import { parseDecodedTx } from './parseDecodedTx';
 
 const app = express();
 
@@ -70,9 +71,7 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
         if (nodeTransaction) {
           console.log(`✅ Found confirmed transaction on node: ${tx_id}`);
           return res.json({
-            tx_id,
-            status: 'confirmed',
-            source: 'node',
+            id: tx_id,
             ...nodeTransaction,
           });
         }
@@ -90,22 +89,26 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
 
       // Decode the transaction using WASM
       try {
-        const { decode_signed_transaction_to_json_str } = require('../lib/wasm/wasm_wrappers');
+        const {
+          decode_signed_transaction_to_js,
+          get_transaction_id
+        } = require('../lib/wasm/wasm_wrappers');
 
         // Convert hex string to Uint8Array
         const transactionBytes = new Uint8Array(
           mempoolResult.transaction.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16))
         );
 
-        // Decode transaction (assuming network = 1 for mainnet)
-        const decodedTransaction = decode_signed_transaction_to_json_str(transactionBytes, 1);
+        const rawDecoded = decode_signed_transaction_to_js(transactionBytes, 1);
+
+        const tx_id = get_transaction_id(transactionBytes, false);
+
+        const parsedTransaction = parseDecodedTx(rawDecoded);
 
         return res.json({
-          tx_id: mempoolResult.id,
-          status: mempoolResult.status,
-          transaction: mempoolResult.transaction,
-          decoded: decodedTransaction,
-          source: 'mempool',
+          id: tx_id,
+          ...parsedTransaction,
+          confirmations: 0,
           timestamp: Math.floor(Date.now() / 1000)
         });
       } catch (decodeError: any) {
@@ -113,10 +116,9 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
 
         // Return raw transaction data if decoding fails
         return res.json({
-          tx_id: mempoolResult.id,
-          status: mempoolResult.status,
-          transaction: mempoolResult.transaction,
-          source: 'mempool',
+          id: mempoolResult.id,
+          confirmations: 0,
+          raw: mempoolResult.transaction,
           timestamp: Math.floor(Date.now() / 1000)
         });
       }

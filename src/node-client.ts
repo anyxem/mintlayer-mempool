@@ -18,6 +18,7 @@ export class NodeClient {
     console.log(`📥 Getting confirmed transaction from node: ${config.nodeGetTransactionUrl}/${tx_id}`);
 
     try {
+      console.log('`${config.nodeGetTransactionUrl}/${tx_id}`', `${config.nodeGetTransactionUrl}/${tx_id}`);
       const response: AxiosResponse = await axios.get(
         `${config.nodeGetTransactionUrl}/${tx_id}`,
         {

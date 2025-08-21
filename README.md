@@ -175,9 +175,30 @@ Response for mempool transaction:
   "status": "InMempool",
   "transaction": "01000400005a6c6b...",
   "decoded": {
-    "inputs": [...],
-    "outputs": [...],
-    "fee": {...}
+    "inputs": [
+      {
+        "input": {
+          "index": 0,
+          "input_type": "UTXO",
+          "source_id": "3e0c04ce80dff7dfae5be22b9ada59f0338d2a6ad6204aa1320a2fa5d6ca7afa",
+          "source_type": "Transaction"
+        },
+        "utxo": null
+      }
+    ],
+    "outputs": [
+      {
+        "destination": "mtc1qxk2wnpqz7s7k5rqv8q9jw7qm9s5l4k3j2h1g0f9e8d7c6b5a4",
+        "type": "Transfer",
+        "value": {
+          "type": "Coin",
+          "amount": {
+            "atoms": "1000000000000",
+            "decimal": "10"
+          }
+        }
+      }
+    ]
   },
   "source": "mempool",
   "timestamp": 1748468977
@@ -204,7 +225,15 @@ The service connects to the Mintlayer node via WebSocket for real-time mempool q
 2. **JSON-RPC Protocol**: Uses `mempool_get_transaction` method to query transactions
 3. **Automatic Reconnection**: Handles connection drops with exponential backoff
 4. **Transaction Decoding**: Automatically decodes raw transactions using WASM bindings
-5. **Dual Source**: Checks confirmed transactions via HTTP, mempool transactions via WebSocket
+5. **Transaction Parsing**: Converts complex decoded transactions into simplified, structured format
+6. **Dual Source**: Checks confirmed transactions via HTTP, mempool transactions via WebSocket
+
+### Transaction Parsing Features
+- **Simplified Structure**: Converts complex nested transaction data into easy-to-use format
+- **Decimal Conversion**: Automatically converts atoms to decimal representation (coins: 11 decimals, tokens: 8 decimals)
+- **Type Mapping**: Maps complex transaction types to simple, consistent structures
+- **Input/Output Processing**: Handles UTXO, AccountCommand, and Account input types
+- **Multi-Output Support**: Supports Transfer, CreateOrder, IssueFungibleToken, Htlc, and other output types
 
 ## Production Deployment
 
