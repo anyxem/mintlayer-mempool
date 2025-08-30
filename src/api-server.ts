@@ -109,6 +109,10 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
           id: tx_id,
           ...parsedTransaction,
           confirmations: 0,
+          fee: {
+            atoms: ((mempoolResult.transaction.length / 2 / 1000)*1e11).toString(),
+            decimal: (mempoolResult.transaction.length / 2 / 1000).toString()
+          },
           timestamp: Math.floor(Date.now() / 1000)
         });
       } catch (decodeError: any) {
@@ -119,6 +123,10 @@ app.get('/api/transaction/:tx_id', async (req: any, res: any) => {
           id: mempoolResult.id,
           confirmations: 0,
           raw: mempoolResult.transaction,
+          fee: {
+            atoms: ((mempoolResult.transaction.length / 2 / 1000)*1e11).toString(),
+            decimal: (mempoolResult.transaction.length / 2 / 1000).toString()
+          },
           timestamp: Math.floor(Date.now() / 1000)
         });
       }

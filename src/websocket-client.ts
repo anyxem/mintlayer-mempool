@@ -106,7 +106,7 @@ export class WebSocketClient {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       console.log(`🔄 Attempting reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${this.reconnectDelay}ms`);
-      
+
       setTimeout(() => {
         this.connect();
       }, this.reconnectDelay);
@@ -184,7 +184,7 @@ export class WebSocketClient {
     try {
       console.log(`🔍 Querying mempool for transaction: ${tx_id}`);
       const result = await this.sendRequest('mempool_get_transaction', [tx_id]);
-      
+
       if (result && result.id && result.transaction) {
         console.log(`✅ Found transaction in mempool: ${tx_id}`);
         return result as MempoolTransactionResult;
@@ -223,14 +223,14 @@ export class WebSocketClient {
       this.ws.close();
       this.ws = null;
     }
-    
+
     // Clear all pending requests
     for (const [id, request] of this.pendingRequests) {
       clearTimeout(request.timeout);
       request.reject(new Error('WebSocket client closed'));
     }
     this.pendingRequests.clear();
-    
+
     console.log('🔒 WebSocket client closed');
   }
 }
