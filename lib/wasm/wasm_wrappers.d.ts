@@ -274,6 +274,43 @@ export function encode_witness_htlc_multisig(sighashtype: SignatureHashType, pri
  */
 export function encode_signed_transaction(transaction: Uint8Array, signatures: Uint8Array): Uint8Array;
 /**
+ * Return a PartiallySignedTransaction object as bytes.
+ *
+ * `transaction` is an encoded `Transaction` (which can be produced via `encode_transaction`).
+ *
+ * `signatures`, `input_utxos`, `input_destinations` and `htlc_secrets` are encoded lists of
+ * optional objects of the corresponding type. To produce such a list, iterate over your
+ * original list of optional objects and then:
+ * 1) emit byte 0 if the current object is null;
+ * 2) otherwise emit byte 1 followed by the object in its encoded form.
+ *
+ * Each individual object in each of the lists corresponds to the transaction input with the same
+ * index and its meaning is as follows:
+ *   1) `signatures` - the signature for the input;
+ *   2) `input_utxos`- the utxo for the input (if it's utxo-based);
+ *   3) `input_destinations` - the destination (address) corresponding to the input; this determines
+ *      the key(s) with which the input has to be signed. Note that for utxo-based inputs the
+ *      corresponding destination can usually be extracted from the utxo itself (the exception
+ *      being the `ProduceBlockFromStake` utxo, which doesn't contain the pool's decommission key).
+ *      However, PartiallySignedTransaction requires that *all* input destinations are provided
+ *      explicitly anyway.
+ *   4) `htlc_secrets` - if the input is an HTLC one and if the transaction is spending the HTLC,
+ *      this should be the HTLC secret. Otherwise it should be null.
+ *
+ *   The number of items in each list must be equal to the number of transaction inputs.
+ *
+ * `additional_info` has the same meaning as in `encode_witness`.
+ */
+export function encode_partially_signed_transaction(transaction: Uint8Array, signatures: Uint8Array, input_utxos: Uint8Array, input_destinations: Uint8Array, htlc_secrets: Uint8Array, additional_info: TxAdditionalInfo, network: Network): Uint8Array;
+/**
+ * Decodes a partially signed transaction from its binary encoding into a JavaScript object.
+ */
+export function decode_partially_signed_transaction_to_js(transaction: Uint8Array, network: Network): any;
+/**
+ * Convert the specified string address into a Destination object, encoded as bytes.
+ */
+export function encode_destination(address: string, network: Network): Uint8Array;
+/**
  * Given a `Transaction` encoded in bytes (not a signed transaction, but a signed transaction is tolerated by ignoring the extra bytes, by choice)
  * this function will return the transaction id.
  *
@@ -290,78 +327,6 @@ export function get_transaction_id(transaction: Uint8Array, strict_byte_size: bo
  * The effective balance is how the influence of a pool is calculated due to its balance.
  */
 export function effective_pool_balance(network: Network, pledge_amount: Amount, pool_balance: Amount): Amount;
-/**
- * Given an output source id as bytes, and an output index, together representing a utxo,
- * this function returns the input that puts them together, as bytes.
- */
-export function encode_input_for_utxo(outpoint_source_id: Uint8Array, output_index: number): Uint8Array;
-/**
- * Given a delegation id, an amount and a network type (mainnet, testnet, etc), this function
- * creates an input that withdraws from a delegation.
- * A nonce is needed because this spends from an account. The nonce must be in sequence for everything in that account.
- */
-export function encode_input_for_withdraw_from_delegation(delegation_id: string, amount: Amount, nonce: bigint, network: Network): Uint8Array;
-/**
- * Given a token_id, an amount of tokens to mint and nonce return an encoded mint tokens input
- */
-export function encode_input_for_mint_tokens(token_id: string, amount: Amount, nonce: bigint, network: Network): Uint8Array;
-/**
- * Given a token_id and nonce return an encoded unmint tokens input
- */
-export function encode_input_for_unmint_tokens(token_id: string, nonce: bigint, network: Network): Uint8Array;
-/**
- * Given a token_id and nonce return an encoded lock_token_supply input
- */
-export function encode_input_for_lock_token_supply(token_id: string, nonce: bigint, network: Network): Uint8Array;
-/**
- * Given a token_id, is token unfreezable and nonce return an encoded freeze token input
- */
-export function encode_input_for_freeze_token(token_id: string, is_token_unfreezable: TokenUnfreezable, nonce: bigint, network: Network): Uint8Array;
-/**
- * Given a token_id and nonce return an encoded unfreeze token input
- */
-export function encode_input_for_unfreeze_token(token_id: string, nonce: bigint, network: Network): Uint8Array;
-/**
- * Given a token_id, new authority destination and nonce return an encoded change token authority input
- */
-export function encode_input_for_change_token_authority(token_id: string, new_authority: string, nonce: bigint, network: Network): Uint8Array;
-/**
- * Given a token_id, new metadata uri and nonce return an encoded change token metadata uri input
- */
-export function encode_input_for_change_token_metadata_uri(token_id: string, new_metadata_uri: string, nonce: bigint, network: Network): Uint8Array;
-/**
- * Given an order id and an amount in the order's ask currency, create an input that fills the order.
- *
- * Note:
- * 1) The nonce is only needed before the orders V1 fork activation. After the fork the nonce is
- *    ignored and any value can be passed for the parameter.
- * 2) FillOrder inputs should not be signed, i.e. use `encode_witness_no_signature` for the inputs
- *    instead of `encode_witness`).
- *    Note that in orders v0 FillOrder inputs can technically have a signature, it's just not checked.
- *    But in orders V1 we actually require that those inputs don't have signatures.
- */
-export function encode_input_for_fill_order(order_id: string, fill_amount: Amount, destination: string, nonce: bigint, current_block_height: bigint, network: Network): Uint8Array;
-/**
- * Given an order id create an input that freezes the order.
- *
- * Note: order freezing is available only after the orders V1 fork activation.
- */
-export function encode_input_for_freeze_order(order_id: string, current_block_height: bigint, network: Network): Uint8Array;
-/**
- * Given an order id create an input that concludes the order.
- *
- * Note: the nonce is only needed before the orders V1 fork activation. After the fork the nonce is
- * ignored and any value can be passed for the parameter.
- */
-export function encode_input_for_conclude_order(order_id: string, nonce: bigint, current_block_height: bigint, network: Network): Uint8Array;
-/**
- * Verify a witness produced by one of the `encode_witness` functions.
- *
- * `input_owner_destination` must be specified if `witness` actually contains a signature
- * (i.e. it's not InputWitness::NoSignature) and the input is not an HTLC one. Otherwise it must
- * be null.
- */
-export function internal_verify_witness(sighashtype: SignatureHashType, input_owner_destination: string | null | undefined, witness: Uint8Array, transaction: Uint8Array, input_utxos: Uint8Array, input_index: number, additional_info: TxAdditionalInfo, current_block_height: bigint, network: Network): void;
 /**
  * Given a destination address, an amount and a network type (mainnet, testnet, etc), this function
  * creates an output of type Transfer, and returns it as bytes.
@@ -448,6 +413,79 @@ export function encode_output_htlc(amount: Amount, token_id: string | null | und
  * 'give_token_id': the parameter represents a Token if it's Some and coins otherwise.
  */
 export function encode_create_order_output(ask_amount: Amount, ask_token_id: string | null | undefined, give_amount: Amount, give_token_id: string | null | undefined, conclude_address: string, network: Network): Uint8Array;
+/**
+ * Given an output source id as bytes, and an output index, together representing a utxo,
+ * this function returns the input that puts them together, as bytes.
+ */
+export function encode_input_for_utxo(outpoint_source_id: Uint8Array, output_index: number): Uint8Array;
+/**
+ * Given a delegation id, an amount and a network type (mainnet, testnet, etc), this function
+ * creates an input that withdraws from a delegation.
+ * A nonce is needed because this spends from an account. The nonce must be in sequence for everything in that account.
+ */
+export function encode_input_for_withdraw_from_delegation(delegation_id: string, amount: Amount, nonce: bigint, network: Network): Uint8Array;
+/**
+ * Given a token_id, an amount of tokens to mint and nonce return an encoded mint tokens input
+ */
+export function encode_input_for_mint_tokens(token_id: string, amount: Amount, nonce: bigint, network: Network): Uint8Array;
+/**
+ * Given a token_id and nonce return an encoded unmint tokens input
+ */
+export function encode_input_for_unmint_tokens(token_id: string, nonce: bigint, network: Network): Uint8Array;
+/**
+ * Given a token_id and nonce return an encoded lock_token_supply input
+ */
+export function encode_input_for_lock_token_supply(token_id: string, nonce: bigint, network: Network): Uint8Array;
+/**
+ * Given a token_id, is token unfreezable and nonce return an encoded freeze token input
+ */
+export function encode_input_for_freeze_token(token_id: string, is_token_unfreezable: TokenUnfreezable, nonce: bigint, network: Network): Uint8Array;
+/**
+ * Given a token_id and nonce return an encoded unfreeze token input
+ */
+export function encode_input_for_unfreeze_token(token_id: string, nonce: bigint, network: Network): Uint8Array;
+/**
+ * Given a token_id, new authority destination and nonce return an encoded change token authority input
+ */
+export function encode_input_for_change_token_authority(token_id: string, new_authority: string, nonce: bigint, network: Network): Uint8Array;
+/**
+ * Given a token_id, new metadata uri and nonce return an encoded change token metadata uri input
+ */
+export function encode_input_for_change_token_metadata_uri(token_id: string, new_metadata_uri: string, nonce: bigint, network: Network): Uint8Array;
+/**
+ * Given an order id and an amount in the order's ask currency, create an input that fills the order.
+ *
+ * Note:
+ * 1) The nonce is only needed before the orders V1 fork activation. After the fork the nonce is
+ *    ignored and any value can be passed for the parameter.
+ * 2) FillOrder inputs should not be signed, i.e. use `encode_witness_no_signature` for the inputs
+ *    instead of `encode_witness`).
+ *    Note that in orders v0 FillOrder inputs can technically have a signature, it's just not checked.
+ *    But in orders V1 we actually require that those inputs don't have signatures.
+ *    Also, in orders V1 the provided destination is always ignored.
+ */
+export function encode_input_for_fill_order(order_id: string, fill_amount: Amount, destination: string, nonce: bigint, current_block_height: bigint, network: Network): Uint8Array;
+/**
+ * Given an order id create an input that freezes the order.
+ *
+ * Note: order freezing is available only after the orders V1 fork activation.
+ */
+export function encode_input_for_freeze_order(order_id: string, current_block_height: bigint, network: Network): Uint8Array;
+/**
+ * Given an order id create an input that concludes the order.
+ *
+ * Note: the nonce is only needed before the orders V1 fork activation. After the fork the nonce is
+ * ignored and any value can be passed for the parameter.
+ */
+export function encode_input_for_conclude_order(order_id: string, nonce: bigint, current_block_height: bigint, network: Network): Uint8Array;
+/**
+ * Verify a witness produced by one of the `encode_witness` functions.
+ *
+ * `input_owner_destination` must be specified if `witness` actually contains a signature
+ * (i.e. it's not InputWitness::NoSignature) and the input is not an HTLC one. Otherwise it must
+ * be null.
+ */
+export function internal_verify_witness(sighashtype: SignatureHashType, input_owner_destination: string | null | undefined, witness: Uint8Array, transaction: Uint8Array, input_utxos: Uint8Array, input_index: number, additional_info: TxAdditionalInfo, current_block_height: bigint, network: Network): void;
 /**
  * Indicates whether a token can be frozen
  */
