@@ -1,0 +1,40 @@
+# Node modules
+node_modules
+npm-debug.log*
+
+# Development files
+*.md
+.git
+.gitignore
+
+# Environment files (will be provided via docker-compose)
+.env
+.env.production
+.env.production.example
+
+# Logs
+logs/
+*.log
+
+# Test files
+*.spec.ts
+*.test.ts
+test_*.ts
+decode_tests/
+
+# Development tools
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# PM2 files
+ecosystem.config.js
+
+# Build artifacts that will be rebuilt
+dist/
+
+# Data directory (will be mounted as volume)
+data/

@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  wallet-mempool:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mintlayer-wallet-mempool
+    restart: unless-stopped
+    networks:
+      - shared_network
+    environment:
+      # Server Configuration
+      NODE_ENV: production
+      PORT: 3000
+      
+      # Mintlayer Node Configuration
+      # Update these URLs to match your node-daemon service
+      NODE_WEBSOCKET_URL: ws://user:user@node-daemon:13030/ws
+      NODE_GET_TRANSACTION_URL: http://api-web-server:3000/api/v2/transaction
+      
+      # Logging Configuration
+      LOG_LEVEL: info
+      
+      # CORS Configuration (optional)
+      # CORS_ORIGINS: https://wallet.mintlayer.org,https://explorer.mintlayer.org
+    ports:
+      - "${WALLET_MEMPOOL_HOST_PORT:-3050}:3000"
+    volumes:
+      # Persist transaction database
+      - wallet_mempool_data:/app/data
+      # Persist logs
+      - wallet_mempool_logs:/app/logs
+    depends_on:
+      - node-daemon
+      - api-web-server
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  wallet_mempool_data:
+  wallet_mempool_logs:
+
+networks:
+  shared_network:
+    external: true

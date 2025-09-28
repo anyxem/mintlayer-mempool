@@ -303,3 +303,159 @@ pm2 monit
 - ✅ Run as dedicated user, not root
 - ✅ Use reverse proxy (nginx) for SSL termination
 - ✅ Configure firewall to restrict access
+
+## Docker Deployment
+
+### Standalone Docker Compose
+
+The project includes a `docker-compose.yml` file for standalone deployment:
+
+```bash
+# Build and start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f wallet-mempool
+
+# Stop the service
+docker-compose down
+```
+
+### Integration with Existing Mintlayer Docker Compose
+
+#### Quick Integration
+
+To add the wallet mempool service to your existing Mintlayer docker-compose setup, add this service definition:
+
+```yaml
+  wallet-mempool:
+    build:
+      context: ./wallet-mempool  # Path to wallet-mempool directory
+      dockerfile: Dockerfile
+    container_name: mintlayer-wallet-mempool
+    restart: unless-stopped
+    networks:
+      - shared_network
+    environment:
+      # Server Configuration
+      NODE_ENV: production
+      PORT: 3000
+
+      # Mintlayer Node Configuration
+      NODE_WEBSOCKET_URL: ws://$NODE_RPC_USERNAME:$NODE_RPC_PASSWORD@node-daemon:13030/ws
+      NODE_GET_TRANSACTION_URL: http://api-web-server:3000/api/v2/transaction
+
+      # Logging Configuration
+      LOG_LEVEL: info
+
+      # CORS Configuration (optional)
+      # CORS_ORIGINS: https://wallet.mintlayer.org,https://explorer.mintlayer.org
+    ports:
+      - "${WALLET_MEMPOOL_HOST_PORT:-3050}:3000"
+    volumes:
+      # Persist transaction database
+      - wallet_mempool_data:/app/data
+      # Persist logs
+      - wallet_mempool_logs:/app/logs
+    depends_on:
+      - node-daemon
+      - api-web-server
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+```
+
+And add the volumes to your volumes section:
+
+```yaml
+volumes:
+  api_postgres_db:
+  api_postgres_db_a:
+  wallet_mempool_data:    # Add this
+  wallet_mempool_logs:    # Add this
+```
+
+#### Complete Integration Example
+
+For a complete example of how to integrate the wallet mempool with your existing Mintlayer services, see the `docker-compose.integration-example.yml` file. This shows the full docker-compose configuration with all services including the wallet mempool.
+
+To use the integration example:
+
+1. **Copy your wallet-mempool directory** to the same location as your main docker-compose.yml
+2. **Copy the wallet mempool service definition** from `docker-compose.integration-example.yml` to your main docker-compose.yml
+3. **Add the required environment variables** to your `.env` file:
+   ```bash
+   # Add to your existing .env file
+   WALLET_MEMPOOL_HOST_PORT=3050
+   ```
+4. **Update the context path** in the wallet-mempool service to match your directory structure
+
+### Environment Variables for Docker
+
+Add these variables to your `.env` file for the main docker-compose:
+
+```bash
+# Wallet Mempool Configuration
+WALLET_MEMPOOL_HOST_PORT=3050
+```
+
+### Quick Docker Setup
+
+Use the provided setup script for easy Docker deployment:
+
+```bash
+# Make setup script executable and run it
+chmod +x docker-setup.sh
+./docker-setup.sh
+
+# Edit environment configuration
+nano .env
+
+# Start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f wallet-mempool
+
+# Test the service
+curl http://localhost:3050/health
+```
+
+### Docker Build and Management
+
+```bash
+# Build the image
+docker build -t mintlayer-wallet-mempool .
+
+# Run standalone container
+docker run -d \
+  --name wallet-mempool \
+  --network shared_network \
+  -p 3050:3000 \
+  -e NODE_WEBSOCKET_URL="ws://user:user@node-daemon:13030/ws" \
+  -e NODE_GET_TRANSACTION_URL="http://api-web-server:3000/api/v2/transaction" \
+  mintlayer-wallet-mempool
+
+# View logs
+docker logs -f wallet-mempool
+
+# Stop and remove
+docker stop wallet-mempool
+docker rm wallet-mempool
+```
+
+### Docker Health Checks
+
+The Docker container includes health checks that verify:
+- Service is responding on port 3000
+- `/health` endpoint returns successful response
+- WebSocket connection to node is active
+
+Check health status:
+```bash
+docker ps  # Shows health status in STATUS column
+docker inspect wallet-mempool | grep -A 10 Health
+```

@@ -1,0 +1,146 @@
+version: '3'
+
+x-common: &ml-common
+  volumes:
+    - ./mintlayer-data:/home/mintlayer
+
+x-common-env: &ml-common-env
+  RUST_LOG:
+  ML_USER_ID:
+  ML_GROUP_ID:
+
+services:
+  node-daemon:
+    <<: *ml-common
+    image: $DOCKERHUB_USERNAME/node-daemon:$ML_SOFTWARE_VERSION
+    command: node-daemon testnet
+    networks:
+      - shared_network
+    healthcheck:
+      test: ["CMD-SHELL", "sleep 5"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 1s
+    environment:
+      <<: *ml-common-env
+      ML_TESTNET_NODE_RPC_BIND_ADDRESS: 0.0.0.0:13030
+      ML_TESTNET_NODE_P2P_BIND_ADDRESSES: 0.0.0.0:$NODE_P2P_HOST_PORT
+      ML_TESTNET_NODE_RPC_USERNAME: $NODE_RPC_USERNAME
+      ML_TESTNET_NODE_RPC_PASSWORD: $NODE_RPC_PASSWORD
+    ports:
+      - "$NODE_RPC_HOST_PORT:13030"
+      - "$NODE_P2P_HOST_PORT:$NODE_P2P_HOST_PORT"
+
+  ### Services needed to run the api server ###
+  api-postgres-db:
+    image: postgres
+    restart: always
+    networks:
+      - shared_network
+    environment:
+      POSTGRES_USER: $API_SERVER_POSTGRES_USER
+      POSTGRES_PASSWORD: $API_SERVER_POSTGRES_PASSWORD
+      POSTGRES_DB: $API_SERVER_POSTGRES_DB
+    volumes:
+       - api_postgres_db:/var/lib/postgresql/data
+
+  api-blockchain-scanner-daemon:
+    <<: *ml-common
+    image: local/api-blockchain-scanner-daemon:1.0.2-txs002
+    build:
+      context: .
+      dockerfile: Dockerfile.scanner2
+    command: api-blockchain-scanner-daemon --network testnet
+    depends_on:
+      - api-postgres-db
+      - node-daemon
+    networks:
+      - shared_network
+    environment:
+      <<: *ml-common-env
+      ML_API_SCANNER_DAEMON_POSTGRES_HOST: api-postgres-db
+      ML_API_SCANNER_DAEMON_POSTGRES_USER: $API_SERVER_POSTGRES_USER
+      ML_API_SCANNER_DAEMON_POSTGRES_PASSWORD: $API_SERVER_POSTGRES_PASSWORD
+      ML_API_SCANNER_DAEMON_POSTGRES_DATABASE: $API_SERVER_POSTGRES_DB
+      ML_API_SCANNER_DAEMON_NODE_RPC_ADDRESS: node-daemon:13030
+      ML_API_SCANNER_DAEMON_NODE_RPC_USERNAME: $NODE_RPC_USERNAME
+      ML_API_SCANNER_DAEMON_NODE_RPC_PASSWORD: $NODE_RPC_PASSWORD
+
+  api-web-server:
+    <<: *ml-common
+    restart: always
+    image: local/api-web-server:1.0.2-txs002
+    build:
+      context: .
+      dockerfile: Dockerfile.server2
+    networks:
+      - shared_network
+    command: api-web-server --network testnet --enable-post-routes
+    depends_on:
+      - api-postgres-db
+      - api-blockchain-scanner-daemon
+      - node-daemon
+    environment:
+      <<: *ml-common-env
+      ML_API_WEB_SRV_BIND_ADDRESS: 0.0.0.0:3000
+      ML_API_WEB_SRV_POSTGRES_HOST: api-postgres-db
+      ML_API_WEB_SRV_POSTGRES_USER: $API_SERVER_POSTGRES_USER
+      ML_API_WEB_SRV_POSTGRES_PASSWORD: $API_SERVER_POSTGRES_PASSWORD
+      ML_API_WEB_SRV_POSTGRES_DATABASE: $API_SERVER_POSTGRES_DB
+      ML_API_WEB_SRV_NODE_RPC_ADDRESS: node-daemon:13030
+      ML_API_WEB_SRV_NODE_RPC_USERNAME: $NODE_RPC_USERNAME
+      ML_API_WEB_SRV_NODE_RPC_PASSWORD: $NODE_RPC_PASSWORD
+      RUST_BACKTRACE: $RUST_BACKTRACE
+    ports:
+      - "$API_SERVER_HOST_PORT:3000"
+
+  ### Wallet Mempool Proxy Service ###
+  wallet-mempool:
+    build:
+      context: ./wallet-mempool  # Adjust path to your wallet-mempool directory
+      dockerfile: Dockerfile
+    container_name: mintlayer-wallet-mempool
+    restart: unless-stopped
+    networks:
+      - shared_network
+    environment:
+      # Server Configuration
+      NODE_ENV: production
+      PORT: 3000
+      
+      # Mintlayer Node Configuration
+      NODE_WEBSOCKET_URL: ws://$NODE_RPC_USERNAME:$NODE_RPC_PASSWORD@node-daemon:13030/ws
+      NODE_GET_TRANSACTION_URL: http://api-web-server:3000/api/v2/transaction
+      
+      # Logging Configuration
+      LOG_LEVEL: info
+      
+      # CORS Configuration (optional)
+      # CORS_ORIGINS: https://wallet.mintlayer.org,https://explorer.mintlayer.org
+    ports:
+      - "${WALLET_MEMPOOL_HOST_PORT:-3050}:3000"
+    volumes:
+      # Persist transaction database
+      - wallet_mempool_data:/app/data
+      # Persist logs
+      - wallet_mempool_logs:/app/logs
+    depends_on:
+      - node-daemon
+      - api-web-server
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+  ### End of Wallet Mempool Proxy Service ###
+
+volumes:
+  api_postgres_db:
+  wallet_mempool_data:    # Added for wallet mempool
+  wallet_mempool_logs:    # Added for wallet mempool
+
+networks:
+  shared_network:
+    external: true
